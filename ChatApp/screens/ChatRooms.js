@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Button } from 'react-native';
+import auth from '@react-native-firebase/auth';
 
 function ChatRooms({ navigation }) {
     return (
@@ -8,7 +9,7 @@ function ChatRooms({ navigation }) {
           title="Go to Specific room"
           onPress={() => navigation.navigate('SpecificRoom')}
         />
-        <Button title="Go back" onPress={() => navigation.goBack()} />
+        <Button title="Sign out" onPress={() => auth().signOut().then(() => console.log('User signed out!'))}/>
       </View>
     );
   }

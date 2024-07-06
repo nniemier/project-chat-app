@@ -1,18 +1,21 @@
 import React from 'react';
-import { Button } from 'react-native';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { StyleSheet, Button } from 'react-native';
+import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
 
 GoogleSignin.configure({
   webClientId: '1013134024517-ohcvfgpqqgcuplj7vr13h8s7lr9behat.apps.googleusercontent.com',
 });
 
-function LoginScreen() {
+function LoginScreen({navigation}) {
   return (
-    <Button
-      title="Google Sign-In"
-      onPress={() => onGoogleButtonPress().then(() => console.log('Signed in with Google!'))}
-    />
+    <GoogleSigninButton
+  size={GoogleSigninButton.Size.Wide}
+  color={GoogleSigninButton.Color.Light}
+  onPress={() => {
+    onGoogleButtonPress().then(() => navigation.navigate('ChatRooms'))
+  }}
+/>
   );
 }
 
