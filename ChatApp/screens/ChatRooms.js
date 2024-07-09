@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Button, FlatList, ActivityIndicator, Text, StyleSheet, StatusBar } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Button, FlatList, ActivityIndicator, Text, StyleSheet, StatusBar, RefreshControl } from 'react-native';
 import auth from '@react-native-firebase/auth';
 //Import for the NoSql database Firestore
 import firestore from '@react-native-firebase/firestore'; 
@@ -11,8 +11,38 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 function ChatRooms({ navigation }) {
   const [loading, setLoading] = useState(true); // Set loading to true on component mount
   const [chatRooms, setChatRooms] = useState([]); // Initial empty array of users
+  const [refreshing, setRefreshing] = useState(false); // State for pull-to-refresh
+
+  const fetchChatRooms = useCallback(() => {
+    setLoading(true);
+    firestore()
+      .collection("chatRoomsCollection")
+      .onSnapshot(querySnapshot => {
+        const chatRooms = [];
+
+        querySnapshot.forEach(documentSnapshot => {
+          chatRooms.push({
+            ...documentSnapshot.data(),
+            key: documentSnapshot.id
+          });
+        });
+
+        setChatRooms(chatRooms);
+        setLoading(false);
+        setRefreshing(false);
+    });
+  }, []);
 
   useEffect(() => {
+    fetchChatRooms();
+  }, [fetchChatRooms]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchChatRooms();
+  };
+
+/*   useEffect(() => {
     const subscriber = firestore()
       .collection('chatRoomsCollection')
       .onSnapshot(querySnapshot => {
@@ -31,7 +61,7 @@ function ChatRooms({ navigation }) {
     // Unsubscribe from events when no longer in use
     return () => subscriber();
   }, []);
-
+ */
   if (loading) {
     return <ActivityIndicator />;
   }
@@ -50,6 +80,7 @@ function ChatRooms({ navigation }) {
           color="black"
           backgroundColor="transparent"
           ></Icon.Button>
+          
 
 {/*           <Button
           title="Go to Specific room"
@@ -57,7 +88,11 @@ function ChatRooms({ navigation }) {
         />
         <Button title="Sign out" onPress={() => auth().signOut().then(() => console.log('User signed out!'))}/> */}
         </View>
+        
       )}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     />
   );
 }
