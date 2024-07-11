@@ -1,17 +1,31 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Button, FlatList, ActivityIndicator, Text, StyleSheet, StatusBar, RefreshControl } from 'react-native';
+import React, { useState, useEffect, useCallback, useLayoutEffect } from 'react';
+import { View, Button, FlatList, ActivityIndicator, Text, StyleSheet, StatusBar, RefreshControl, TouchableOpacity } from 'react-native';
 import auth from '@react-native-firebase/auth';
 //Import for the NoSql database Firestore
 import firestore from '@react-native-firebase/firestore'; 
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-//Store a list of chat room documents within a "ChatRooms" collection 
-//const chatRoomsCollection = firestore().collection('ChatRooms');
-
 function ChatRooms({ navigation }) {
   const [loading, setLoading] = useState(true); // Set loading to true on component mount
   const [chatRooms, setChatRooms] = useState([]); // Initial empty array of users
   const [refreshing, setRefreshing] = useState(false); // State for pull-to-refresh
+
+  const onSignOut = () => {
+    auth()
+  .signOut()
+  .then(() => console.log('User signed out!'));
+  }
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={onSignOut} style={{marginRight: 10}} >
+          <Text>Sign out</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
+
 
   const fetchChatRooms = useCallback(() => {
     setLoading(true);
@@ -42,26 +56,6 @@ function ChatRooms({ navigation }) {
     fetchChatRooms();
   };
 
-/*   useEffect(() => {
-    const subscriber = firestore()
-      .collection('chatRoomsCollection')
-      .onSnapshot(querySnapshot => {
-        const chatRooms = [];
-  
-        querySnapshot.forEach(documentSnapshot => {
-          chatRooms.push({
-            ...documentSnapshot.data(),
-            key: documentSnapshot.id,
-          });
-        });
-  
-        setChatRooms(chatRooms);
-        setLoading(false);
-      });
-    // Unsubscribe from events when no longer in use
-    return () => subscriber();
-  }, []);
- */
   if (loading) {
     return <ActivityIndicator />;
   }
@@ -79,14 +73,8 @@ function ChatRooms({ navigation }) {
           name="chevron-right" 
           color="black"
           backgroundColor="transparent"
+          onPress={() => navigation.navigate('SpecificRoom', { chatRoomId: item.key })}
           ></Icon.Button>
-          
-
-{/*           <Button
-          title="Go to Specific room"
-          onPress={() => navigation.navigate('SpecificRoom')}
-        />
-        <Button title="Sign out" onPress={() => auth().signOut().then(() => console.log('User signed out!'))}/> */}
         </View>
         
       )}
@@ -120,17 +108,5 @@ function ChatRooms({ navigation }) {
       flex: 1
     },
   });
-
-/* 
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Button
-          title="Go to Specific room"
-          onPress={() => navigation.navigate('SpecificRoom')}
-        />
-        <Button title="Sign out" onPress={() => auth().signOut().then(() => console.log('User signed out!'))}/>
-      </View>
-    ); */
-
 
 export default ChatRooms;

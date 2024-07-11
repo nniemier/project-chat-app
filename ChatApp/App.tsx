@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Button, View } from 'react-native';
 //Imports for authentication
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 //Imports for navigation
@@ -18,7 +17,7 @@ function MyStack({ user }: { user: FirebaseAuthTypes.User | null }) {
     <Stack.Navigator>
       {user ? ( //If the user is already signed in the screen with the different chat rooms is displayed 
         <>
-          <Stack.Screen name="Chats" component={ChatRooms} />
+          <Stack.Screen name="ChatRooms" component={ChatRooms} />
           <Stack.Screen name="SpecificRoom" component={SpecificRoom} />
         </>
       ) : ( //If the user is not signed in the login screen is displayed
