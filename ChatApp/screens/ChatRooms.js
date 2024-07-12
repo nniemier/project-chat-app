@@ -19,15 +19,15 @@ function ChatRooms({ navigation }) {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={onSignOut} style={{marginRight: 10}} >
-          <Text>Sign out</Text>
+        <TouchableOpacity onPress={onSignOut} style={styles.signout_touch}>
+          <Text style={styles.signout_text}>Sign out</Text>
         </TouchableOpacity>
       ),
     });
   }, [navigation]);
 
 
-  const fetchChatRooms = useCallback(() => {
+   const fetchChatRooms = useCallback(() => {
     setLoading(true);
     firestore()
       .collection("chatRoomsCollection")
@@ -45,7 +45,7 @@ function ChatRooms({ navigation }) {
         setLoading(false);
         setRefreshing(false);
     });
-  }, []);
+  }, []); 
 
   useEffect(() => {
     fetchChatRooms();
@@ -61,7 +61,7 @@ function ChatRooms({ navigation }) {
   }
 
   return (
-    <FlatList
+    <FlatList 
       data={chatRooms}
       renderItem={({ item }) => (
         <View style={styles.container}>
@@ -72,8 +72,8 @@ function ChatRooms({ navigation }) {
           <Icon.Button 
           name="chevron-right" 
           color="black"
-          backgroundColor="transparent"
-          onPress={() => navigation.navigate('SpecificRoom', { chatRoomId: item.key })}
+          backgroundColor="#E1E1E1"
+          onPress={() => navigation.navigate('Chat', { chatRoomId: item.key })}
           ></Icon.Button>
         </View>
         
@@ -87,10 +87,11 @@ function ChatRooms({ navigation }) {
 
   const styles = StyleSheet.create({
     container: {
+      borderRadius: 10,
       flexDirection: "row",
       alignItems: "center",
       marginTop: StatusBar.currentHeight || 10,
-      backgroundColor: 'lightgrey',
+      backgroundColor: '#E1E1E1',
       padding: 20,
       marginVertical: 8,
       marginHorizontal: 16,
@@ -107,6 +108,12 @@ function ChatRooms({ navigation }) {
     textContainer: {
       flex: 1
     },
+    signout_touch: {
+      marginRight: 10,
+    },
+    signout_text: {
+      color: "#42C7F7"
+    }
   });
 
 export default ChatRooms;

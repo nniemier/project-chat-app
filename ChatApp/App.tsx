@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { StyleSheet } from 'react-native';
 //Imports for authentication
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 //Imports for navigation
@@ -12,20 +13,26 @@ import SpecificRoom from './screens/SpecificRoom';
 
 const Stack = createStackNavigator(); //Creates the Stack navigator
 
-function MyStack({ user }: { user: FirebaseAuthTypes.User | null }) {
-  return (
-    <Stack.Navigator>
-      {user ? ( //If the user is already signed in the screen with the different chat rooms is displayed 
-        <>
-          <Stack.Screen name="ChatRooms" component={ChatRooms} />
-          <Stack.Screen name="SpecificRoom" component={SpecificRoom} />
-        </>
-      ) : ( //If the user is not signed in the login screen is displayed
-        <Stack.Screen name="Login" component={LoginScreen} />
-      )}
-    </Stack.Navigator>
-  );
-}
+  function MyStack({ user }: { user: FirebaseAuthTypes.User | null }) {
+    return (
+      <Stack.Navigator>
+        {user ? ( //If the user is already signed in the screen with the different chat rooms is displayed 
+          <>
+            <Stack.Screen name="Rooms" component={ChatRooms} options={() => ({
+              headerTitleAlign: 'center',
+            })}/>
+            <Stack.Screen name="Chat" component={SpecificRoom} options={() => ({
+              headerTitleAlign: 'center',
+            })}/>
+          </>
+        ) : ( //If the user is not signed in the login screen is displayed
+          <Stack.Screen name="Login" component={LoginScreen} options={() => ({
+            headerTitleAlign: 'center',
+          })}/>
+        )}
+      </Stack.Navigator>
+    );
+  }
 
 const App: React.FC = () => {
   // Set an initializing state whilst Firebase connects

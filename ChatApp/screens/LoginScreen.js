@@ -9,16 +9,46 @@ GoogleSignin.configure({
   webClientId: '1013134024517-ohcvfgpqqgcuplj7vr13h8s7lr9behat.apps.googleusercontent.com',
 });
 
-function LoginScreen() {
+function LoginScreen({ navigation }) {
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await onGoogleButtonPress();
+      navigation.navigate('Rooms');
+    } catch (error) {
+      showAlert('Google Sign-In Error', error.message);
+    }
+  };
+
+  const handleFacebookSignIn = async () => {
+    try {
+      await onFacebookButtonPress();
+      navigation.navigate('Rooms');
+    } catch (error) {
+      showAlert('Facebook Sign-In Error', error.message);
+    }
+  };
+
+  const showAlert = (title, message) => {
+    Alert.alert(
+      title,
+      message,
+      [
+        { text: 'OK', onPress: () => console.log('OK Pressed') },
+      ],
+      { cancelable: false }
+    );
+  };
+
   return (
     <View style={styles.container}>
       <GoogleSigninButton
         size={GoogleSigninButton.Size.Wide}
         color={GoogleSigninButton.Color.Light}
-        onPress={onGoogleButtonPress}
+        onPress={handleGoogleSignIn}
       />
       <Icon.Button name="facebook"backgroundColor="#3b5998" 
-      onPress={onFacebookButtonPress}> 
+      onPress={handleFacebookSignIn}> 
       Sign in with Facebook
       </Icon.Button>
     </View>
