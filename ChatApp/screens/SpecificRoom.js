@@ -107,6 +107,29 @@ function SpecificRoom({ route }) {
     });
   };
 
+  const takePhoto = () => {
+    launchCamera({ mediaType: 'photo' }, response => {
+      if (response.didCancel) {
+        console.log('User cancelled camera');
+      } else if (response.errorCode) {
+        console.log('Camera Error: ', response.errorMessage);
+      } else {
+        const { uri } = response.assets[0];
+        const imageMessage = {
+          _id: Math.random().toString(36).substring(7),
+          createdAt: new Date(),
+          user: {
+            _id: auth().currentUser?.uid,
+            name: auth().currentUser?.displayName,
+            avatar: "https://i.pravatar.cc/300",
+          },
+          image: uri,
+        };
+        onSend([imageMessage]);
+      }
+    });
+  };
+
   if (loading) {
     return <ActivityIndicator />;
   }
@@ -136,7 +159,7 @@ function SpecificRoom({ route }) {
             style={{ marginBottom: 10, marginRight: 10, transform: [{ rotateY: '180deg' }] }}
             size={25}
             color='#C3C3C3'
-            //onPress={takePhoto}
+            onPress={takePhoto}
           />
           <Icon
             name="image"
