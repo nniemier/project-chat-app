@@ -1,9 +1,10 @@
 import React from 'react';
-import { StyleSheet, Button, Alert, View } from 'react-native';
+import { StyleSheet, Button, Alert, View, Text} from 'react-native';
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
 import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { Header } from 'react-native-elements';
 
 GoogleSignin.configure({
   webClientId: '1013134024517-ohcvfgpqqgcuplj7vr13h8s7lr9behat.apps.googleusercontent.com',
@@ -47,9 +48,12 @@ function LoginScreen({ navigation }) {
         color={GoogleSigninButton.Color.Light}
         onPress={handleGoogleSignIn}
       />
-      <Icon.Button name="facebook"backgroundColor="#3b5998" 
+      <Icon.Button 
+      name="facebook" 
+      backgroundColor="#3b5998"
+      style={styles.facebook_button} 
       onPress={handleFacebookSignIn}> 
-      Sign in with Facebook
+       <Text style={styles.facebook_button_text}>Sign in with Facebook</Text>
       </Icon.Button>
     </View>
   );
@@ -95,6 +99,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  facebook_button: {
+    height: 46,
+    width: 308,
+  },
+  facebook_button_text: {
+    flex: 1,
+    textAlign: 'center',
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });
 

@@ -27,7 +27,7 @@ const Stack = createStackNavigator(); //Creates the Stack navigator
           </>
         ) : ( //If the user is not signed in the login screen is displayed
           <Stack.Screen name="Login" component={LoginScreen} options={() => ({
-            headerTitleAlign: 'center',
+            headerTitle: '',
           })}/>
         )}
       </Stack.Navigator>

@@ -1,38 +1,40 @@
-import React, { useState, useEffect, useCallback} from 'react';
-import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
-import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, ActivityIndicator, StyleSheet, Text, Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { GiftedChat, Bubble, Send } from 'react-native-gifted-chat';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 
-function SpecificRoom({ route, navigation }) {
+function SpecificRoom({ route }) {
   const { chatRoomId } = route.params;
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-const getMessages = async (chatRoomId, message_collection) => {
-  const snapshot = await firestore()
-  .collection('chatRoomsCollection')
-  .doc(chatRoomId)
-  .collection(message_collection)
-  .orderBy("timestamp", "desc")
-  .get();
+  const getMessages = async (chatRoomId, message_collection) => {
+    const snapshot = await firestore()
+      .collection('chatRoomsCollection')
+      .doc(chatRoomId)
+      .collection(message_collection)
+      .orderBy("timestamp", "desc")
+      .get();
 
-  return snapshot.docs.map(doc => {
-    const firebaseData = doc.data();
+    return snapshot.docs.map(doc => {
+      const firebaseData = doc.data();
 
-    return {
-      _id: doc.id,
-      text: firebaseData.text,
-      createdAt: firebaseData.timestamp.toDate(),
-      user: {
-        _id: firebaseData.user._id,
-        name: firebaseData.user.name,
-        avatar: firebaseData.user.avatar,
-      },
-    };
-  }).filter(msg => msg !== null);
-
- };
+      return {
+        _id: doc.id,
+        text: firebaseData.text || '',
+        createdAt: firebaseData.timestamp.toDate(),
+        user: {
+          _id: firebaseData.user._id,
+          name: firebaseData.user.name,
+          avatar: firebaseData.user.avatar,
+        },
+        image: firebaseData.image || '',
+      };
+    }).filter(msg => msg !== null);
+  };
 
   const loadMessages = useCallback(async () => {
     setLoading(true);
@@ -54,36 +56,56 @@ const getMessages = async (chatRoomId, message_collection) => {
 
   const saveMessage = async (chatRoomId, message_collection, messageData) => {
     await firestore()
-    .collection("chatRoomsCollection")
-    .doc(chatRoomId)
-    .collection(message_collection)
-    .add(messageData)
-  }
+      .collection("chatRoomsCollection")
+      .doc(chatRoomId)
+      .collection(message_collection)
+      .add(messageData);
+  };
 
-   const onSend = useCallback(async (messages = []) => {
+  const onSend = useCallback(async (messages = []) => {
     setMessages(previousMessages => GiftedChat.append(previousMessages, messages));
 
-    const { _id, createdAt, text, user } = messages[0];
+    const { _id, createdAt, text, user, image } = messages[0];
 
-    // Create the message data structure
     const messageData = {
       _id,
       timestamp: firestore.Timestamp.fromDate(new Date(createdAt)),
       text,
       user,
+      image: image || ''
     };
 
     if (chatRoomId === 'LkJC4Dkq3mFK6o3XTRWx') {
-      // Save to messageCollection
-        await saveMessage(chatRoomId, "messageCollection", messageData)
+      await saveMessage(chatRoomId, "messageCollection", messageData);
     } else if (chatRoomId === 'r9YzxiuAMFErs0eitK1Z') {
-      // Save to messageCollectionTwo
-        await saveMessage(chatRoomId, "messageCollectionTwo", messageData)
+      await saveMessage(chatRoomId, "messageCollectionTwo", messageData);
     } else {
-      // Handle other cases or throw an error
       console.warn(`Unhandled chatRoomId: ${chatRoomId}`);
     }
-  }, [chatRoomId]); 
+  }, [chatRoomId]);
+
+  const pickImage = () => {
+    launchImageLibrary({ mediaType: 'photo' }, response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorCode) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else {
+        const { uri } = response.assets[0];
+        const imageMessage = {
+          _id: Math.random().toString(36).substring(7),
+          createdAt: new Date(),
+          user: {
+            _id: auth().currentUser?.uid,
+            name: auth().currentUser?.displayName,
+            avatar: "https://i.pravatar.cc/300",
+          },
+          image: uri,
+        };
+        onSend([imageMessage]);
+      }
+    });
+  };
 
   if (loading) {
     return <ActivityIndicator />;
@@ -105,10 +127,41 @@ const getMessages = async (chatRoomId, message_collection) => {
     );
   }
 
+  const renderSend = (props) => {
+    return (
+      <Send {...props}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
+        <Icon
+            name="camera"
+            style={{ marginBottom: 10, marginRight: 10, transform: [{ rotateY: '180deg' }] }}
+            size={25}
+            color='#C3C3C3'
+            //onPress={takePhoto}
+          />
+          <Icon
+            name="image"
+            style={{ marginBottom: 10, marginRight: 10, transform: [{ rotateY: '180deg' }] }}
+            size={25}
+            color='#C3C3C3'
+            onPress={pickImage}
+          />
+          <Icon
+          name="send"
+          style={{marginBottom: 10, marginRight: 10}}
+          size={25}
+          color='#42C7F7'
+          tvParallaxProperties={undefined}
+        />
+        </View>
+      </Send>
+    );
+  };
+
   return (
     <GiftedChat
-     renderUsernameOnMessage={true}
-     renderBubble={renderBubble}
+      renderUsernameOnMessage={true}
+      renderBubble={renderBubble}
+      renderSend={renderSend}
       messages={messages}
       onSend={messages => onSend(messages)}
       user={{
@@ -121,65 +174,3 @@ const getMessages = async (chatRoomId, message_collection) => {
 }
 
 export default SpecificRoom;
-
-/*   // Fetch messages from the first subcollection
-  const fetchMessagesFromFirstCollection = useCallback(async () => {
-    const snapshot = await firestore()
-      .collection('chatRoomsCollection')
-      .doc(chatRoomId)
-      .collection('messageCollection')
-      .orderBy('timestamp', 'desc')
-      .get();
-
-    return snapshot.docs.map(doc => {
-      const firebaseData = doc.data();
-
-      return {
-        _id: doc.id,
-        text: firebaseData.text,
-        createdAt: firebaseData.timestamp.toDate(),
-        user: {
-          _id: 1,
-          name: "Adam",
-        },
-      };
-    }).filter(msg => msg !== null);
-  }, [chatRoomId]);
-
-  // Fetch messages from the second subcollection
-  const fetchMessagesFromSecondCollection = useCallback(async () => {
-    const snapshot = await firestore()
-      .collection('chatRoomsCollection')
-      .doc(chatRoomId)
-      .collection('messageCollectionTwo')
-      .orderBy('timestamp', 'desc')
-      .get();
-
-    return snapshot.docs.map(doc => {
-      const firebaseData = doc.data();
-
-      return {
-        _id: doc.id,
-        text: firebaseData.text,
-        createdAt: firebaseData.timestamp.toDate(),
-        user: {
-          _id: 2,
-          name: "Sophie",
-        },
-      };
-    }).filter(msg => msg !== null);
-  }, [chatRoomId]); */
-
-
-/*   // Fetch and combine messages from both subcollections
-  const fetchMessages = useCallback(async () => {
-    setLoading(true);
-    const [messagesFromFirst, messagesFromSecond] = await Promise.all([
-      fetchMessagesFromFirstCollection(),
-      fetchMessagesFromSecondCollection(),
-    ]);
-
-    const combinedMessages = [...messagesFromFirst, ...messagesFromSecond].sort((a, b) => b.createdAt - a.createdAt);
-    setMessages(combinedMessages);
-    setLoading(false);
-  }, [fetchMessagesFromFirstCollection, fetchMessagesFromSecondCollection]); */
