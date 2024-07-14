@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { Platform, Linking } from 'react-native';
 //Imports for authentication
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 //Imports for navigation
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 //Import for the splash-screen
 import BootSplash from 'react-native-bootsplash';
@@ -26,9 +26,7 @@ const Stack = createStackNavigator(); //Creates the Stack navigator
             })}/>
           </>
         ) : ( //If the user is not signed in the login screen is displayed
-          <Stack.Screen name="Login" component={LoginScreen} options={() => ({
-            headerTitle: '',
-          })}/>
+          <Stack.Screen name="Login" options={{headerShown: false, cardStyle: {backgroundColor:"#CCF1FF"}}} component={LoginScreen}/>
         )}
       </Stack.Navigator>
     );
@@ -38,6 +36,7 @@ const App: React.FC = () => {
   // Set an initializing state whilst Firebase connects
   const [initializing, setInitializing] = useState<boolean>(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+  const navigationRef = useNavigationContainerRef();
 
   // Handle user state changes
   function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
@@ -48,12 +47,12 @@ const App: React.FC = () => {
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber; // unsubscribe on unmount
-  }, []);
+  }, []); 
 
   if (initializing) return null;
 
   return (
-    <NavigationContainer onReady={() => BootSplash.hide({ fade: true })}>
+    <NavigationContainer ref={navigationRef} onReady={() => BootSplash.hide({ fade: true })}>
       <MyStack user={user} />
     </NavigationContainer>
   );

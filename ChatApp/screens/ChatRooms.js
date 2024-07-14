@@ -26,30 +26,53 @@ function ChatRooms({ navigation }) {
     });
   }, [navigation]);
 
+  const getLatestMessageTimestamp = async (chatRoomId, message_collection) => {
+    const snapshot = await firestore()
+      .collection('chatRoomsCollection')
+      .doc(chatRoomId)
+      .collection(message_collection)
+      .orderBy('timestamp', 'desc')
+      .limit(1)
+      .get();
 
-   const fetchChatRooms = useCallback(() => {
+    if (!snapshot.empty) {
+      return snapshot.docs[0].data().timestamp.toDate();
+    }
+
+    return null;
+  };
+
+  const fetchChatRooms = useCallback(async () => {
     setLoading(true);
-    firestore()
-      .collection("chatRoomsCollection")
-      .onSnapshot(querySnapshot => {
-        const chatRooms = [];
+    const snapshot = await firestore().collection("chatRoomsCollection").get();
 
-        querySnapshot.forEach(documentSnapshot => {
-          chatRooms.push({
-            ...documentSnapshot.data(),
-            key: documentSnapshot.id
-          });
-        });
+    const chatRooms = await Promise.all(snapshot.docs.map(async (documentSnapshot) => {
+      const chatRoomId = documentSnapshot.id;
+      const latestMessageTimestampOne = await getLatestMessageTimestamp(chatRoomId, 'messageCollection');
+      const latestMessageTimestampTwo = await getLatestMessageTimestamp(chatRoomId, 'messageCollectionTwo');
 
-        setChatRooms(chatRooms);
-        setLoading(false);
-        setRefreshing(false);
-    });
-  }, []); 
+      const latestMessageTimestamp = latestMessageTimestampOne > latestMessageTimestampTwo ? latestMessageTimestampOne : latestMessageTimestampTwo;
 
-  useEffect(() => {
+      return {
+        ...documentSnapshot.data(),
+        key: chatRoomId,
+        latestMessageTimestamp,
+      };
+    }));
+
+    // Sort the chat rooms by the latest message timestamp
+    const sortedChatRooms = chatRooms
+      .filter(chatRoom => chatRoom.latestMessageTimestamp !== null)
+      .sort((a, b) => b.latestMessageTimestamp - a.latestMessageTimestamp);
+
+    setChatRooms(sortedChatRooms);
+    setLoading(false);
+    setRefreshing(false);
+  }, []);
+
+   useEffect(() => {
     fetchChatRooms();
-  }, [fetchChatRooms]);
+  }, [fetchChatRooms]); 
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -112,7 +135,7 @@ function ChatRooms({ navigation }) {
       marginRight: 10,
     },
     signout_text: {
-      color: "#42C7F7"
+      color: "#24BDF4"
     }
   });
 
