@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { GiftedChat, Bubble, Send } from 'react-native-gifted-chat';
 import firestore from '@react-native-firebase/firestore';
@@ -9,35 +9,48 @@ import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 
 function SpecificRoom({ route }) {
   const { chatRoomId } = route.params;
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [lastDoc, setLastDoc] = useState(null);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [messages, setMessages] = useState([]); //Holds the chat messages
+  const [loading, setLoading] = useState(true); //Indicates if messages are currently being fetched
+  const [lastDoc, setLastDoc] = useState(null); //Keeps track of the last document fetched for pagination
+  const [loadingMore, setLoadingMore] = useState(false); //Indicates if more messages are currently being fetched for pagination
 
+//This function get the messages from Firestore based on chatRoomId and message_collection
   const getMessages = async (chatRoomId, message_collection, limit = 50, startAfter = null) => {
-    let query = firestore()
-      .collection('chatRoomsCollection')
-      .doc(chatRoomId)
-      .collection(message_collection)
-      .orderBy("timestamp", "desc")
-      .limit(limit);
+    let query = firestore() //Initialize the Firestore database instance
+      .collection('chatRoomsCollection') //Specifies the collection where the chat rooms are stored
+      .doc(chatRoomId) //Specifies the specific chat room documents within the collection
+      .collection(message_collection) //Specifies the subcollection where messages are stored
+      .orderBy("timestamp", "desc") //Orders the messages by their timestamp field on descending order (latest message first)
+      .limit(limit); //Limits the number of messages returned to "limit" (50)
 
+    //Checks if there is a "startAfter" parameter provided
     if (startAfter) {
+      //Modifies the query object to start the query after the startAfter document
+      /*This is useful to use pagination in Firestore queries. 
+      For examlpe, after fetching the initial set of documents, 
+      startAfter allows fetching the next set of documents starting from a specific document */
       query = query.startAfter(startAfter);
     }
 
+    //Executes the Firstore query and returns a QuerySnapshot
+    /* This QuerySnapshot contains metadata and an array of QueryDocumentSnapshot objects
+    representing the documents returned by the query */
     const snapshot = await query.get();
 
+    //Checks if the snapshot is not empty
     if (!snapshot.empty) {
+      //Sets the lastDoc state to the last document in the array of documents snapshot.docs
+      //This helps maintaining the reference to the last document fetched
       setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
     }
 
     return snapshot.docs.map(doc => {
-      const firebaseData = doc.data();
+      const firebaseData = doc.data(); //Extracts the firebaseData from each document
+      //Constructs and returns a new object representing each message with fields e.g. "_id"
       return {
         _id: doc.id,
         text: firebaseData.text || '',
-        createdAt: firebaseData.timestamp.toDate(),
+        createdAt: firebaseData.timestamp.toDate(), //Changes firebaseData.timestamp to a JavaScript Date object
         user: {
           _id: firebaseData.user._id,
           name: firebaseData.user.name,
@@ -45,23 +58,27 @@ function SpecificRoom({ route }) {
         },
         image: firebaseData.image || '',
       };
-    }).filter(msg => msg !== null);
+    }).filter(msg => msg !== null); //Filters out any messages that might be "null"
   };
 
+/* This function fetches messages from two different Firestore collections "messageCollection" and "messageCollectionTwo"
+for a specific chat room "chatRoomId" */
   const loadMessages = useCallback(async () => {
-    setLoading(true);
-    try {
-      const messagesFromFirstCollection = await getMessages(chatRoomId, 'messageCollection');
+    setLoading(true); //Sets a loading state to true, meaning that messages are being fetched
+    try { //Wraps the message fetching in a try-catch block to handle any potential errors that may occur
+      const messagesFromFirstCollection = await getMessages(chatRoomId, 'messageCollection'); //Uses the getMessages function
       const messagesFromSecondCollection = await getMessages(chatRoomId, 'messageCollectionTwo');
-
+      //Combines and sorts these messages by their "createdAt" timestamp in descending order
       const combinedMessages = [...messagesFromFirstCollection, ...messagesFromSecondCollection].sort((a, b) => b.createdAt - a.createdAt);
-      setMessages(combinedMessages);
+      //Updates the component state "setMessages" with the combined and sorted messages
+      setMessages(combinedMessages); 
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
-    setLoading(false);
+    setLoading(false); //Sets the loading state to false once the message fetching and state updating are completed
   }, [chatRoomId]);
 
+//This function loads more messages when the user scrolls to the top of the chat
   const loadMoreMessages = useCallback(async () => {
     if (loadingMore || !lastDoc) return;
 
@@ -82,6 +99,8 @@ function SpecificRoom({ route }) {
     loadMessages();
   }, [loadMessages]);
 
+
+//Save a message to Firestore based on the chatRoomId and message_collection
   const saveMessage = async (chatRoomId, message_collection, messageData) => {
     await firestore()
       .collection('chatRoomsCollection')
