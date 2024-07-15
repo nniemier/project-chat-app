@@ -73,6 +73,9 @@ This screen displays a chat interface for a specific chat room. It displays mess
 - An input field at the bottom of the view is shown
   - When pressed the keyboard opens
   - When a message is entered and the user presses "Send"/"Enter" the message is sent and added to the list
+  - An image can be uploaded from the camera (`react-native-image-picker ` library was used)
+  - An image can be uploaded from the phone gallery (`react-native-image-picker ` library was used)
+  - The images are shown in the chat rooms in the same flow as messages
 
 - A message consists of 
   - Avatar of sender
