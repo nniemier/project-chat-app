@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { GiftedChat, Bubble, Send } from 'react-native-gifted-chat';
 import firestore from '@react-native-firebase/firestore';
