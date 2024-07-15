@@ -80,7 +80,7 @@ function LoginScreen({ navigation }) {
   );
 }
 
-//This code is taken directly from: https://rnfirebase.io/auth/social-auth (Google sign-in)
+//This code is taken directly from the React Native Firebase documentation: https://rnfirebase.io/auth/social-auth (Google sign-in)
 async function onGoogleButtonPress() {
   // Check if your device supports Google Play
   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
@@ -94,7 +94,7 @@ async function onGoogleButtonPress() {
   return auth().signInWithCredential(googleCredential);
 }
 
-//This code is taken directly from: https://rnfirebase.io/auth/social-auth (Facebook sign-in)
+//This code is taken directly from the React Native Firebase documentation: https://rnfirebase.io/auth/social-auth (Facebook sign-in)
 async function onFacebookButtonPress() {
   // Attempt login with permissions
   const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
